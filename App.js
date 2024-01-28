@@ -2,9 +2,11 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, Button } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { Accelerometer, Gyroscope } from 'expo-sensors';
+import moment from 'moment';
 
 import { db } from "./firebaseConfig";
 import { ref, set } from "firebase/database";
+
 
 export default function App() {
 
@@ -30,6 +32,19 @@ export default function App() {
       console.error("Error during unsubscribe:", error);
     }
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const snapshot = await db.ref('/trials/joana+').once('value');
+        console.log(snapshot)
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     Accelerometer.setUpdateInterval(200);
@@ -65,9 +80,18 @@ export default function App() {
 
     setTimeout(() => {
       setIsTrial(false)
-      set(ref(db, 'sensors/'), {
-        accelerometer: accData,
-        gyroscope: gyroData
+      let date = new Date().toDateString()
+      set(ref(db, 'trials/' + "joana"+"/trial_4/"), {
+        time: moment().format('MMMM Do YYYY, h:mm:ss a'),
+        single_task: {
+          accelerometer: accData,
+          gyroscope: gyroData
+        },
+        dual_task: {
+          accelerometer: "N/A",
+          gyroscope: "N/A"
+        }
+        
       });
       initialTimeAcc = 0
       initialTimeGyro = 0
