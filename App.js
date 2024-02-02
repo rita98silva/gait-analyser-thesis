@@ -70,7 +70,14 @@ function TrialStack() {
 
 function ResultsStack() {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+    screenOptions={{
+      headerBackground: () => <GradientHeader2 />,
+      headerTitleStyle: {
+        color: '#fff', 
+      },
+    }}
+    >
       <Stack.Screen name="Result" component={Results} />
     </Stack.Navigator>
   );
@@ -97,6 +104,9 @@ function App() {
         headerShown:false,
         tabBarActiveTintColor: '#141ab8',
         tabBarInactiveTintColor: '#808080',
+        tabBarLabelStyle: {
+          fontSize: 13, 
+        }
       })}
     >
       <Tab.Screen name="Home" component={HomeStack} />
