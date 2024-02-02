@@ -1,117 +1,110 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Button } from 'react-native';
-import React, { useEffect, useState } from 'react';
-import { Accelerometer, Gyroscope } from 'expo-sensors';
-import moment from 'moment';
-
-import { db } from "./firebaseConfig";
-import { ref, set } from "firebase/database";
-
-
-export default function App() {
-
-  const [isTrial, setIsTrial] = useState(false)
-  const [accData, setAccData] = useState([]);
-  const [gyroData, setGyroData] = useState([]);
-
-  const [isOver, setIsOver] = useState(false)
-
-  const [subscriptionAcc, setSubscriptionAcc] = useState(null);
-  const [subscriptionGyro, setSubscriptionGyro] = useState(null);
-
-  var initialTimeAcc = 0;
-  var initialTimeGyro = 0;
-
-  const unsubscribe = () => {
-    try {
-      subscriptionAcc && subscriptionAcc.remove();
-      subscriptionGyro && subscriptionGyro.remove();
-      setSubscriptionAcc(null);
-      setSubscriptionGyro(null);
-    } catch (error) {
-      console.error("Error during unsubscribe:", error);
-    }
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const snapshot = await db.ref('/trials/joana+').once('value');
-        console.log(snapshot)
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    Accelerometer.setUpdateInterval(200);
-    Gyroscope.setUpdateInterval(200);
-
-    if (isTrial) {
-      setSubscriptionAcc(Accelerometer.addListener(({ x, y, z }) => {
-        var currentTime = Date.now();
-        if (initialTimeAcc === 0) {
-          initialTimeAcc = currentTime;
-        }
-        currentTime = ((currentTime - initialTimeAcc) / 1000).toFixed(2);
-        setAccData(prevData => [...prevData, { x, y, z, currentTime }]);
-      }));
-
-      setSubscriptionGyro(Gyroscope.addListener(({ x, y, z }) => {
-        var currentTime = Date.now();
-        if (initialTimeGyro === 0) {
-          initialTimeGyro = currentTime;
-        }
-        currentTime = ((currentTime - initialTimeGyro) / 1000).toFixed(2);
-        setGyroData(prevData => [...prevData, { x, y, z, currentTime }]);
-      }));
-    } else {
-      unsubscribe();
-    }
-  }, [isTrial]);
+import * as React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Home from "./pages/Home";
+import Trials from "./pages/Trials"
+import Results from './pages/Results';
+import { Text, View } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons'; 
+import { LinearGradient } from 'expo-linear-gradient';
 
 
-  const handleTrial = () => {
-    setIsOver(false)
-    setIsTrial(true)
+const Stack = createNativeStackNavigator();
 
-    setTimeout(() => {
-      setIsTrial(false)
-      let date = new Date().toDateString()
-      set(ref(db, 'trials/' + "joana"+"/trial_4/"), {
-        time: moment().format('MMMM Do YYYY, h:mm:ss a'),
-        single_task: {
-          accelerometer: accData,
-          gyroscope: gyroData
-        },
-        dual_task: {
-          accelerometer: "N/A",
-          gyroscope: "N/A"
-        }
-        
-      });
-      initialTimeAcc = 0
-      initialTimeGyro = 0
-      setIsOver(true)
-    }, 10000);
-  }
+const Tab = createBottomTabNavigator();
 
+const GradientHeader = () => (
+  <LinearGradient
+    colors={['#8bae1d', '#caeb5e']} 
+    start={[0, 1]}
+    end={[0, 0]}
+    style={{ borderBottomLeftRadius: 15, borderBottomRightRadius: 15 }}
+  >
+    <View style={{ alignItems: 'flex-start', justifyContent:"flex-end",  height: 100, marginBottom:15, marginLeft:10 }}>
+  <Text style={{ color: '#fff', fontSize: 18 }}>
+    Welcome,{' '}
+    <Text style={{ fontWeight: 'bold' }}>Rita Silva</Text>
+  </Text>
+</View>
+  </LinearGradient>
+);
+
+const GradientHeader2 = () => (
+  <LinearGradient
+    colors={['#8bae1d', '#caeb5e']} 
+    start={[0, 1]}
+    end={[0, 0]}
+    style={{ flex: 1 }}
+  >
+  </LinearGradient>
+);
+
+
+function HomeStack() {
   return (
-    <View style={styles.container}>
-      <Button title="Get Accelerometer data" onPress={handleTrial} />
-      {isOver ? <Text>TRIAL IS OVER!</Text> : null}
-    </View>
+    <Stack.Navigator
+      screenOptions={{
+        header: () => <GradientHeader />,
+      }}
+    >
+      <Stack.Screen name="HomePage" component={Home} />
+    </Stack.Navigator>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+function TrialStack() {
+  return (
+    <Stack.Navigator
+    screenOptions={{
+      headerBackground: () => <GradientHeader2 />,
+      headerTitleStyle: {
+        color: '#fff', 
+      },
+    }}
+    >
+      <Stack.Screen name="Trials" component={Trials} />
+    </Stack.Navigator>
+  );
+}
+
+function ResultsStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="Result" component={Results} />
+    </Stack.Navigator>
+  );
+}
+
+function App() {
+  return (
+    <NavigationContainer>
+      <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ color, size }) => {
+          let iconName;
+
+          if (route.name === 'Home') {
+            iconName = 'home';
+          } else if (route.name === 'Trial') {
+            iconName = 'directions-walk';
+          } else if (route.name === 'Results') {
+            iconName = 'equalizer';
+          }
+
+          return <Icon name={iconName} size={size} color={color} />;
+        },
+        headerShown:false,
+        tabBarActiveTintColor: '#141ab8',
+        tabBarInactiveTintColor: '#808080',
+      })}
+    >
+      <Tab.Screen name="Home" component={HomeStack} />
+        <Tab.Screen name="Trial" component={TrialStack} />
+        <Tab.Screen name="Results" component={ResultsStack} />
+    </Tab.Navigator>
+    </NavigationContainer>
+  );
+}
+
+export default App;
