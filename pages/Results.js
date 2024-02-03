@@ -4,6 +4,8 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 import { ApplicationProvider, Text, Divider, List, ListItem, Layout } from '@ui-kitten/components';
 import * as eva from '@eva-design/eva';
 
+import Sensors from "../Sensors"
+
 
 export default function Results() {
 
@@ -11,9 +13,10 @@ export default function Results() {
 
   
   function SingleTask() {
+    Sensors("rita", "Trial_7")
     return (
       <ApplicationProvider {...eva} theme={eva.light}>
-        <Text>To be done</Text>
+        <Text>Sensors</Text>
       </ApplicationProvider>
     );
   }

@@ -1,117 +1,42 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Button } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { Accelerometer, Gyroscope } from 'expo-sensors';
-import moment from 'moment';
-
+import { ref, set, onValue } from "firebase/database";
 import { db } from "./firebaseConfig";
-import { ref, set } from "firebase/database";
 
+function StepDetectionFunction (AccSamples, ACalib, T, w){}
 
-export default function App() {
+export default function Sensors(patient, trial) {
 
-  const [isTrial, setIsTrial] = useState(false)
-  const [accData, setAccData] = useState([]);
-  const [gyroData, setGyroData] = useState([]);
+    var AccSamples = null
 
-  const [isOver, setIsOver] = useState(false)
+    var AbiasX = null
+    var AbiasY = null
+    var AbiasZ = null
 
-  const [subscriptionAcc, setSubscriptionAcc] = useState(null);
-  const [subscriptionGyro, setSubscriptionGyro] = useState(null);
+    var ACalib = null
 
-  var initialTimeAcc = 0;
-  var initialTimeGyro = 0;
+    const dataRef = ref(db, `Patients/${patient}/sensor_trials/single_task/${trial}`);
 
-  const unsubscribe = () => {
-    try {
-      subscriptionAcc && subscriptionAcc.remove();
-      subscriptionGyro && subscriptionGyro.remove();
-      setSubscriptionAcc(null);
-      setSubscriptionGyro(null);
-    } catch (error) {
-      console.error("Error during unsubscribe:", error);
-    }
-  };
+    const fetchData = onValue(dataRef, (snapshot) => {
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const snapshot = await db.ref('/trials/joana+').once('value');
-        console.log(snapshot)
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
+      AccSamples = snapshot.val()
+      const numSamples = snapshot.val().accelerometer.length
+      AccSamples.accelerometer.map((data) => {
+        AbiasX = AbiasX + data.x
+        AbiasY = AbiasY + data.y
+        AbiasZ = AbiasZ + data.z
+      })
+   
+      AbiasX = AbiasX/numSamples
+      AbiasY = AbiasY/numSamples
+      AbiasZ = AbiasZ/numSamples
 
-    fetchData();
-  }, []);
+      ACalib = Math.sqrt(Math.pow(AbiasX, 2) + Math.pow(AbiasY, 2) + Math.pow(AbiasZ, 2))
 
-  useEffect(() => {
-    Accelerometer.setUpdateInterval(200);
-    Gyroscope.setUpdateInterval(200);
+      console.log(ACalib)
+    });
 
-    if (isTrial) {
-      setSubscriptionAcc(Accelerometer.addListener(({ x, y, z }) => {
-        var currentTime = Date.now();
-        if (initialTimeAcc === 0) {
-          initialTimeAcc = currentTime;
-        }
-        currentTime = ((currentTime - initialTimeAcc) / 1000).toFixed(2);
-        setAccData(prevData => [...prevData, { x, y, z, currentTime }]);
-      }));
-
-      setSubscriptionGyro(Gyroscope.addListener(({ x, y, z }) => {
-        var currentTime = Date.now();
-        if (initialTimeGyro === 0) {
-          initialTimeGyro = currentTime;
-        }
-        currentTime = ((currentTime - initialTimeGyro) / 1000).toFixed(2);
-        setGyroData(prevData => [...prevData, { x, y, z, currentTime }]);
-      }));
-    } else {
-      unsubscribe();
-    }
-  }, [isTrial]);
-
-
-  const handleTrial = () => {
-    setIsOver(false)
-    setIsTrial(true)
-
-    setTimeout(() => {
-      setIsTrial(false)
-      let date = new Date().toDateString()
-      set(ref(db, 'trials/' + "joana"+"/trial_4/"), {
-        time: moment().format('MMMM Do YYYY, h:mm:ss a'),
-        single_task: {
-          accelerometer: accData,
-          gyroscope: gyroData
-        },
-        dual_task: {
-          accelerometer: "N/A",
-          gyroscope: "N/A"
-        }
-        
-      });
-      initialTimeAcc = 0
-      initialTimeGyro = 0
-      setIsOver(true)
-    }, 10000);
-  }
-
-  return (
-    <View style={styles.container}>
-      <Button title="Get Accelerometer data" onPress={handleTrial} />
-      {isOver ? <Text>TRIAL IS OVER!</Text> : null}
-    </View>
-  );
+     return fetchData;
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+
