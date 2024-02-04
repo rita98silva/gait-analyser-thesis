@@ -48,7 +48,7 @@ function SingleTask() {
           initialTimeAcc = currentTime;
         }
         currentTime = ((currentTime - initialTimeAcc) / 1000).toFixed(2);
-        setAccData(prevData => [...prevData, { x, y, z, currentTime }]);
+        setAccData(prevData => [...prevData, { x: x * 9.8, y: y * 9.8, z: z * 9.8, currentTime }]);
       }));
     }
   }, [isTrial]);
@@ -108,8 +108,8 @@ function SingleTask() {
         }).then(() => {
           initialTimeAcc = 0
           initialTimeGyro = 0
-          setAccData([{ x: 0.0000, y: 0.0000, z: 0.0000 }])
-          setGyroData([{ x: 0.0000, y: 0.0000, z: 0.0000 }])
+          /* setAccData([{ x: 0.0000, y: 0.0000, z: 0.0000 }])
+          setGyroData([{ x: 0.0000, y: 0.0000, z: 0.0000 }]) */
           setModalVisible(!modalVisible)
         });
       }
