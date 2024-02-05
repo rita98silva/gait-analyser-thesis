@@ -5,8 +5,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Home from "./pages/Home";
 import Trials from "./pages/Trials"
 import Results from './pages/Results';
-import { Text, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons'; 
+import { Text, View, Image, StyleSheet } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 
@@ -14,25 +14,42 @@ const Stack = createNativeStackNavigator();
 
 const Tab = createBottomTabNavigator();
 
+const styles = StyleSheet.create({
+  tinyLogo: {
+    width: 60,
+    height: 60,
+  },
+});
+
 const GradientHeader = () => (
   <LinearGradient
-    colors={['#8bae1d', '#caeb5e']} 
+    colors={['#8bae1d', '#caeb5e']}
     start={[0, 1]}
     end={[0, 0]}
     style={{ borderBottomLeftRadius: 15, borderBottomRightRadius: 15 }}
   >
-    <View style={{ alignItems: 'flex-start', justifyContent:"flex-end",  height: 100, marginBottom:15, marginLeft:10 }}>
-  <Text style={{ color: '#fff', fontSize: 18 }}>
-    Welcome,{' '}
-    <Text style={{ fontWeight: 'bold' }}>Rita Silva</Text>
-  </Text>
-</View>
+    <View style={{ alignItems: 'flex-start', justifyContent: "flex-end", height: 130, marginBottom: 15, marginLeft: 10, marginTop: 15 }}>
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <Image
+          style={styles.tinyLogo}
+          source={require('./assets/app-logo.png')}
+        />
+        <View style={{ flexDirection: "column", alignItems: "flex-start" }}>
+          <Text style={{ fontWeight: 'bold', fontFamily: 'sans-serif', fontSize: 20, color: '#fff' }}>GaitLab</Text>
+          <View style={{ backgroundColor: '#fff', height: 1, width: 100, marginTop: 5 }} />
+        </View>
+      </View>
+      <Text style={{ color: '#fff', fontSize: 18, paddingTop: 20 }}>
+        Welcome,{' '}
+        <Text style={{ fontWeight: 'bold' }}>Rita Silva</Text>
+      </Text>
+    </View>
   </LinearGradient>
 );
 
 const GradientHeader2 = () => (
   <LinearGradient
-    colors={['#8bae1d', '#caeb5e']} 
+    colors={['#8bae1d', '#caeb5e']}
     start={[0, 1]}
     end={[0, 0]}
     style={{ flex: 1 }}
@@ -56,12 +73,12 @@ function HomeStack() {
 function TrialStack() {
   return (
     <Stack.Navigator
-    screenOptions={{
-      headerBackground: () => <GradientHeader2 />,
-      headerTitleStyle: {
-        color: '#fff', 
-      },
-    }}
+      screenOptions={{
+        headerBackground: () => <GradientHeader2 />,
+        headerTitleStyle: {
+          color: '#fff',
+        },
+      }}
     >
       <Stack.Screen name="Trials" component={Trials} />
     </Stack.Navigator>
@@ -71,12 +88,12 @@ function TrialStack() {
 function ResultsStack() {
   return (
     <Stack.Navigator
-    screenOptions={{
-      headerBackground: () => <GradientHeader2 />,
-      headerTitleStyle: {
-        color: '#fff', 
-      },
-    }}
+      screenOptions={{
+        headerBackground: () => <GradientHeader2 />,
+        headerTitleStyle: {
+          color: '#fff',
+        },
+      }}
     >
       <Stack.Screen name="Result" component={Results} />
     </Stack.Navigator>
@@ -87,32 +104,32 @@ function App() {
   return (
     <NavigationContainer>
       <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size }) => {
-          let iconName;
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ color, size }) => {
+            let iconName;
 
-          if (route.name === 'Home') {
-            iconName = 'home';
-          } else if (route.name === 'Trial') {
-            iconName = 'directions-walk';
-          } else if (route.name === 'Results') {
-            iconName = 'equalizer';
+            if (route.name === 'Home') {
+              iconName = 'home';
+            } else if (route.name === 'Trial') {
+              iconName = 'directions-walk';
+            } else if (route.name === 'Results') {
+              iconName = 'equalizer';
+            }
+
+            return <Icon name={iconName} size={size} color={color} />;
+          },
+          headerShown: false,
+          tabBarActiveTintColor: '#141ab8',
+          tabBarInactiveTintColor: '#808080',
+          tabBarLabelStyle: {
+            fontSize: 13,
           }
-
-          return <Icon name={iconName} size={size} color={color} />;
-        },
-        headerShown:false,
-        tabBarActiveTintColor: '#141ab8',
-        tabBarInactiveTintColor: '#808080',
-        tabBarLabelStyle: {
-          fontSize: 13, 
-        }
-      })}
-    >
-      <Tab.Screen name="Home" component={HomeStack} />
+        })}
+      >
+        <Tab.Screen name="Home" component={HomeStack} />
         <Tab.Screen name="Trial" component={TrialStack} />
         <Tab.Screen name="Results" component={ResultsStack} />
-    </Tab.Navigator>
+      </Tab.Navigator>
     </NavigationContainer>
   );
 }

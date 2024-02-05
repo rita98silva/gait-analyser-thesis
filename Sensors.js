@@ -23,7 +23,7 @@ function AMW (AccSamples, ACalib) {
     sum = 0
   }
 
-  console.log(filteredEnergy)
+  //console.log(filteredEnergy)
 
   return null;
 }
@@ -51,7 +51,7 @@ export default function Sensors(patient, trial) {
       AccSamples = snapshot.val().accelerometer
       const numSamples = snapshot.val().accelerometer.length
       AccSamples.map((data) => {
-        console.log(data.currentTime)
+        //console.log(data.currentTime)
         AbiasX = AbiasX + data.x
         AbiasY = AbiasY + data.y
         AbiasZ = AbiasZ + data.z

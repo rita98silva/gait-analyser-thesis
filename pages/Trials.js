@@ -92,7 +92,7 @@ function SingleTask() {
       console.error("Error during unsubscribe:", error);
     }
   };
-  
+
 
   const handleTrial = () => {
     setIsTrial(true)
@@ -218,7 +218,6 @@ function DualTask() {
 }
 
 export default function Trials() {
-
 
   const Tab = createMaterialTopTabNavigator();
 

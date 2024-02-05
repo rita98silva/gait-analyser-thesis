@@ -1,14 +1,12 @@
-import { StyleSheet, View, SafeAreaView } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import * as eva from '@eva-design/eva';
 import { ApplicationProvider, Layout, Button, Text } from '@ui-kitten/components';
-import { EvaIconsPack } from '@ui-kitten/eva-icons';
-import Icon from 'react-native-vector-icons/MaterialIcons'; // Import the icon library you want to use
+import Icon from 'react-native-vector-icons/MaterialIcons'; 
 
 export default function Home({ navigation }) {
 
   return (
-
     <ApplicationProvider {...eva} theme={eva.light}>
       <Layout
         style={styles.container}
@@ -65,5 +63,4 @@ const styles = StyleSheet.create({
   text: {
     fontSize:18
   }
-
 });
