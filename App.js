@@ -14,6 +14,45 @@ const Stack = createNativeStackNavigator();
 
 const Tab = createBottomTabNavigator();
 
+const [accData, setAccData] = useState([{ x: 0.0000, y: 0.0000, z: 0.0000 }]);
+
+const [subscriptionAcc, setSubscriptionAcc] = useState(null);
+
+const [isTrial, setIsTrial] = useState(false)
+
+
+var initialTimeAcc = 0;
+
+useEffect(() => {
+  const handleAccelerometerData = ({ x, y, z }) => {
+    var currentTime = Date.now();
+    if (initialTimeAcc === 0) {
+      initialTimeAcc = currentTime;
+    }
+    currentTime = ((currentTime - initialTimeAcc) / 1000).toFixed(2);
+    setAccData(prevData => [...prevData, { x: x * 9.8, y: y * 9.8, z: z * 9.8, currentTime }]);
+  };
+
+  if (isTrial) {
+    Accelerometer.setUpdateInterval(50);
+    const subscription = Accelerometer.addListener(handleAccelerometerData);
+    setSubscriptionAcc(subscription);
+  } else {
+    // If isTrial is false, remove the subscription
+    if (subscriptionAcc) {
+      subscriptionAcc.remove();
+    }
+  }
+
+  // Clean up the subscription on component unmount
+  return () => {
+    if (subscriptionAcc) {
+      subscriptionAcc.remove();
+      setSubscriptionAcc(null); // Reset the subscription state
+    }
+  };
+}, [isTrial]); 
+
 const styles = StyleSheet.create({
   tinyLogo: {
     width: 60,
@@ -57,6 +96,9 @@ const GradientHeader2 = () => (
   </LinearGradient>
 );
 
+const TrialsScreen = () => {
+  <Trials accData={accData} isTrial={isTrial}/>
+}
 
 function HomeStack() {
   return (
@@ -80,7 +122,7 @@ function TrialStack() {
         },
       }}
     >
-      <Stack.Screen name="Trials" component={Trials} />
+      <Stack.Screen name="Trials" component={TrialsScreen} />
     </Stack.Navigator>
   );
 }

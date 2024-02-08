@@ -132,7 +132,7 @@ export default function Results({ navigation }) {
           headerShown: false,
         }}
       >
-        {/*  <Stack.Screen name="TrialTimeline" component={TimelineComponent} /> */}
+        <Stack.Screen name="TrialTimeline" component={TimelineComponent} />
         <Stack.Screen name="ResultsCharts" component={ResultsChart} />
       </Stack.Navigator>
     );

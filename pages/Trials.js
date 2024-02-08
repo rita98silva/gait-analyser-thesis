@@ -5,10 +5,24 @@ import moment from 'moment';
 import { db } from "../firebaseConfig";
 import { ref, set, onValue } from "firebase/database";
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import { ApplicationProvider, Text, Divider, List, ListItem, Layout, Button } from '@ui-kitten/components';
+import { ApplicationProvider, Text, Divider, List, ListItem, Layout, Button, Spinner } from '@ui-kitten/components';
 import * as eva from '@eva-design/eva';
 
+
+
 function SingleTask() {
+
+  async function SensorReading () {
+    try {
+      subscriptionAcc && subscriptionAcc.remove();
+      //subscriptionGyro && subscriptionGyro.remove();
+      setSubscriptionAcc(null);
+      setSubscriptionGyro(null);
+    } catch (error) {
+      console.error("Error during unsubscribe:", error);
+    }
+  }
+
   const [accData, setAccData] = useState([{ x: 0.0000, y: 0.0000, z: 0.0000 }]);
   const [gyroData, setGyroData] = useState([{ x: 0.0000, y: 0.0000, z: 0.0000 }]);
 
@@ -29,33 +43,55 @@ function SingleTask() {
     const dataRef = ref(db, 'Patients/rita/sensor_trials/single_task');
 
     const fetchData = onValue(dataRef, (snapshot) => {
-      const keys = Object.keys(snapshot.val());
-      const lastKey = keys[keys.length - 1];
-      setTrial(parseInt(lastKey.charAt(lastKey.length - 1), 10))
+      const trials = []
+      const keys = Object.keys(snapshot.val())
+      keys.map((key) => {
+        trials.push(key.split("_")[1])
+      })
+      setTrial(parseInt(Math.max(...trials)))
     });
 
     return () => fetchData();
   }, []);
 
 
-  useEffect(() => {
-    Accelerometer.setUpdateInterval(200);
-
+  /* useEffect(() => {
+    const handleAccelerometerData = ({ x, y, z }) => {
+      var currentTime = Date.now();
+      if (initialTimeAcc === 0) {
+        initialTimeAcc = currentTime;
+      }
+  
+  
+      currentTime = ((currentTime - initialTimeAcc) / 1000).toFixed(2);
+      setAccData(prevData => [...prevData, { x: x * 9.8, y: y * 9.8, z: z * 9.8, currentTime }]);
+    };
+  
     if (isTrial) {
-      setSubscriptionAcc(Accelerometer.addListener(({ x, y, z }) => {
-        var currentTime = Date.now();
-        if (initialTimeAcc === 0) {
-          initialTimeAcc = currentTime;
-        }
-        currentTime = ((currentTime - initialTimeAcc) / 1000).toFixed(2);
-        setAccData(prevData => [...prevData, { x: x * 9.8, y: y * 9.8, z: z * 9.8, currentTime }]);
-      }));
+      Accelerometer.setUpdateInterval(50);
+      const subscription = Accelerometer.addListener(handleAccelerometerData);
+      setSubscriptionAcc(subscription);
+    } else {
+      // If isTrial is false, remove the subscription
+      if (subscriptionAcc) {
+        subscriptionAcc.remove();
+      }
     }
-  }, [isTrial]);
+  
+    // Clean up the subscription on component unmount
+    return () => {
+      if (subscriptionAcc) {
+        subscriptionAcc.remove();
+        setSubscriptionAcc(null); // Reset the subscription state
+
+      }
+    };
+  }, [isTrial]); */
+  
 
 
-  useEffect(() => {
-    Gyroscope.setUpdateInterval(200);
+  /* useEffect(() => {
+    Gyroscope.setUpdateInterval(50);
 
     if (isTrial) {
       setSubscriptionGyro(Gyroscope.addListener(({ x, y, z }) => {
@@ -69,23 +105,42 @@ function SingleTask() {
     } else {
       unsubscribe();
     }
-  }, [isTrial]);
+  }, [isTrial]); */
 
 
-  useEffect(() => {
+  /* useEffect(() => {
     return () => {
       if (timeoutIdRef.current) {
         clearTimeout(timeoutIdRef.current);
         timeoutIdRef.current = null;
       }
     };
-  }, []);
+  }, []); */
 
+
+
+  /* useEffect(() => {
+    if (!isTrial && accData.length > 1) {
+      console.log("ola")
+      // This block will be executed when isTrial becomes false
+      set(ref(db, 'Patients/' + "rita" + `/sensor_trials/single_task/Trial_${trial + 1}/`), {
+        time: moment().format('MMMM Do YYYY, h:mm:ss a'),
+        accelerometer: accData.slice(1),
+        gyroscope: gyroData.slice(1)
+      }).then(() => {
+        initialTimeAcc = 0;
+        initialTimeGyro = 0;
+        setAccData([{ x: 0.0000, y: 0.0000, z: 0.0000 }]);
+        setGyroData([{ x: 0.0000, y: 0.0000, z: 0.0000 }]);
+        setModalVisible(!modalVisible);
+      });
+    }
+  }, [isTrial]); */
 
   const unsubscribe = () => {
     try {
       subscriptionAcc && subscriptionAcc.remove();
-      subscriptionGyro && subscriptionGyro.remove();
+      //subscriptionGyro && subscriptionGyro.remove();
       setSubscriptionAcc(null);
       setSubscriptionGyro(null);
     } catch (error) {
@@ -97,35 +152,19 @@ function SingleTask() {
   const handleTrial = () => {
     setIsTrial(true)
 
+    /* //20 seconds
     const id = setTimeout(() => {
-      if (timeoutIdRef.current) {
-        setIsTrial(false)
-
-        set(ref(db, 'Patients/' + "rita" + `/sensor_trials/single_task/Trial_${trial + 1}/`), {
-          time: moment().format('MMMM Do YYYY, h:mm:ss a'),
-          accelerometer: accData.slice(1),
-          gyroscope: gyroData.slice(1)
-        }).then(() => {
-          initialTimeAcc = 0
-          initialTimeGyro = 0
-          /* setAccData([{ x: 0.0000, y: 0.0000, z: 0.0000 }])
-          setGyroData([{ x: 0.0000, y: 0.0000, z: 0.0000 }]) */
-          setModalVisible(!modalVisible)
-        });
-      }
+      setIsTrial(false);
     }, 10000);
 
-    timeoutIdRef.current = id;
+    timeoutIdRef.current = id; */
   }
 
-  const stopTrial = () => {
-    if (timeoutIdRef.current) {
-      setIsTrial(false)
-      clearTimeout(timeoutIdRef.current);
-      timeoutIdRef.current = null;
-      initialTimeAcc = 0
-      initialTimeGyro = 0
-    }
+  const stopTrial = async () => {
+    // Set isTrial to false with a delay
+    setTimeout(() => {
+      setIsTrial(false);
+    }, 0);
   }
 
   const renderAcc = () => (
@@ -181,9 +220,11 @@ function SingleTask() {
           </View>
           {!isTrial ? (<Button style={{ marginTop: 25, marginLeft: 100, elevation: 2, width: 200, backgroundColor: "#8bae1d", borderWidth: 0 }} onPress={handleTrial}>
             <Text style={{ fontSize: 30, color: 'white' }}>Start Trial</Text>
-          </Button>) : (<Button style={{ marginTop: 25, marginLeft: 100, elevation: 2, width: 200, backgroundColor: "#d3d3d3", borderWidth: 0 }} onPress={stopTrial}>
+          </Button>) : (
+          <Button style={{ marginTop: 25, marginLeft: 100, elevation: 2, width: 200, backgroundColor: "#d3d3d3", borderWidth: 0 }} onPress={stopTrial}>
             <Text style={{ fontSize: 30, color: 'white' }}>Stop Trial</Text>
-          </Button>)}
+          </Button>
+          )}
         </View>
         <View style={styles.centeredView}>
           <Modal
@@ -217,7 +258,7 @@ function DualTask() {
   );
 }
 
-export default function Trials() {
+export default function Trials({accData, isTrial}) {
 
   const Tab = createMaterialTopTabNavigator();
 
