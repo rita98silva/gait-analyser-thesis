@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useMemo } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -14,50 +14,12 @@ const Stack = createNativeStackNavigator();
 
 const Tab = createBottomTabNavigator();
 
-const [accData, setAccData] = useState([{ x: 0.0000, y: 0.0000, z: 0.0000 }]);
-
-const [subscriptionAcc, setSubscriptionAcc] = useState(null);
-
-const [isTrial, setIsTrial] = useState(false)
-
-
-var initialTimeAcc = 0;
-
-useEffect(() => {
-  const handleAccelerometerData = ({ x, y, z }) => {
-    var currentTime = Date.now();
-    if (initialTimeAcc === 0) {
-      initialTimeAcc = currentTime;
-    }
-    currentTime = ((currentTime - initialTimeAcc) / 1000).toFixed(2);
-    setAccData(prevData => [...prevData, { x: x * 9.8, y: y * 9.8, z: z * 9.8, currentTime }]);
-  };
-
-  if (isTrial) {
-    Accelerometer.setUpdateInterval(50);
-    const subscription = Accelerometer.addListener(handleAccelerometerData);
-    setSubscriptionAcc(subscription);
-  } else {
-    // If isTrial is false, remove the subscription
-    if (subscriptionAcc) {
-      subscriptionAcc.remove();
-    }
-  }
-
-  // Clean up the subscription on component unmount
-  return () => {
-    if (subscriptionAcc) {
-      subscriptionAcc.remove();
-      setSubscriptionAcc(null); // Reset the subscription state
-    }
-  };
-}, [isTrial]); 
-
 const styles = StyleSheet.create({
   tinyLogo: {
     width: 60,
     height: 60,
   },
+  linearGradient: {}
 });
 
 const GradientHeader = () => (
@@ -86,20 +48,6 @@ const GradientHeader = () => (
   </LinearGradient>
 );
 
-const GradientHeader2 = () => (
-  <LinearGradient
-    colors={['#8bae1d', '#caeb5e']}
-    start={[0, 1]}
-    end={[0, 0]}
-    style={{ flex: 1 }}
-  >
-  </LinearGradient>
-);
-
-const TrialsScreen = () => {
-  <Trials accData={accData} isTrial={isTrial}/>
-}
-
 function HomeStack() {
   return (
     <Stack.Navigator
@@ -116,13 +64,16 @@ function TrialStack() {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerBackground: () => <GradientHeader2 />,
+        headerBackground: () => <LinearGradient colors={['#8bae1d', '#caeb5e']}
+        start={[0, 1]}
+        end={[0, 0]}
+        style={{ flex: 1 }}/>,
         headerTitleStyle: {
           color: '#fff',
         },
       }}
     >
-      <Stack.Screen name="Trials" component={TrialsScreen} />
+      <Stack.Screen name="Trials" component={Trials} />
     </Stack.Navigator>
   );
 }
@@ -131,7 +82,10 @@ function ResultsStack() {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerBackground: () => <GradientHeader2 />,
+        headerBackground: () => <LinearGradient colors={['#8bae1d', '#caeb5e']}
+        start={[0, 1]}
+        end={[0, 0]}
+        style={{ flex: 1 }}/>,
         headerTitleStyle: {
           color: '#fff',
         },

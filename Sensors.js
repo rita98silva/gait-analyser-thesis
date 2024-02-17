@@ -28,7 +28,7 @@ function AMW(AccSamples, ACalib) {
 
 function StepDetectionAlgorithm(AccSamples, ACalib, T, w) {
   var filteredEnergy = AMW(AccSamples, ACalib)
-
+console.log(filteredEnergy)
   var counter = 0;
   var prev_high = false
   var look_fw = false
@@ -77,12 +77,8 @@ function StepDetectionAlgorithm(AccSamples, ACalib, T, w) {
     }
   }
 
-  console.log(step_start_idx)
-  console.log(step_end_idx)
-
-  return step_start_idx, step_end_idx;
+  return [step_start_idx, step_end_idx];
 }
-
 
 export default function Sensors(patient, trial) {
 
@@ -94,12 +90,11 @@ export default function Sensors(patient, trial) {
 
   var ACalib = null
 
-  const dataRef = ref(db, `Patients/${patient}/sensor_trials/single_task/Trial_5`);
+  const dataRef = ref(db, `Patients/${patient}/sensor_trials/single_task/Trial_21`);
 
   const fetchData = onValue(dataRef, (snapshot) => {
 
     AccSamples = snapshot.val().accelerometer
-    console.log(AccSamples)
     const numSamples = snapshot.val().accelerometer.length
     AccSamples.map((data) => {
       AbiasX = AbiasX + data.x
@@ -113,10 +108,9 @@ export default function Sensors(patient, trial) {
 
     ACalib = Math.sqrt(Math.pow(AbiasX, 2) + Math.pow(AbiasY, 2) + Math.pow(AbiasZ, 2))
 
-    StepDetectionAlgorithm(AccSamples, ACalib, 0.05, 5)
+    console.log(StepDetectionAlgorithm(AccSamples, ACalib, 0.1, 5))
   });
 
   return fetchData;
 }
-
 

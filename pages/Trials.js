@@ -5,29 +5,22 @@ import moment from 'moment';
 import { db } from "../firebaseConfig";
 import { ref, set, onValue } from "firebase/database";
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import { ApplicationProvider, Text, Divider, List, ListItem, Layout, Button, Spinner } from '@ui-kitten/components';
-import * as eva from '@eva-design/eva';
+import { ApplicationProvider, Text, Divider, List, ListItem, Layout, Button } from '@ui-kitten/components';
+/* import CircularProgress from 'react-native-circular-progress-indicator';
+ */import * as eva from '@eva-design/eva';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
-
+var accData = []
 
 function SingleTask() {
-
-  async function SensorReading () {
-    try {
-      subscriptionAcc && subscriptionAcc.remove();
-      //subscriptionGyro && subscriptionGyro.remove();
-      setSubscriptionAcc(null);
-      setSubscriptionGyro(null);
-    } catch (error) {
-      console.error("Error during unsubscribe:", error);
-    }
-  }
-
-  const [accData, setAccData] = useState([{ x: 0.0000, y: 0.0000, z: 0.0000 }]);
+  //const [accData, setAccData] = useState([{ x: 0.0000, y: 0.0000, z: 0.0000 }]);
   const [gyroData, setGyroData] = useState([{ x: 0.0000, y: 0.0000, z: 0.0000 }]);
 
-  const [subscriptionAcc, setSubscriptionAcc] = useState(null);
-  const [subscriptionGyro, setSubscriptionGyro] = useState(null);
+
+  /*  const [subscriptionAcc, setSubscriptionAcc] = useState(null);
+   const [subscriptionGyro, setSubscriptionGyro] = useState(null); */
+
+  const [dataset, setDataSet] = useState(0)
 
   const [isTrial, setIsTrial] = useState(false)
   const [modalVisible, setModalVisible] = useState(false);
@@ -38,6 +31,8 @@ function SingleTask() {
 
   var initialTimeAcc = 0;
   var initialTimeGyro = 0;
+
+  Accelerometer.setUpdateInterval(50);
 
   useEffect(() => {
     const dataRef = ref(db, 'Patients/rita/sensor_trials/single_task');
@@ -55,145 +50,91 @@ function SingleTask() {
   }, []);
 
 
-  /* useEffect(() => {
-    const handleAccelerometerData = ({ x, y, z }) => {
-      var currentTime = Date.now();
-      if (initialTimeAcc === 0) {
-        initialTimeAcc = currentTime;
-      }
-  
-  
-      currentTime = ((currentTime - initialTimeAcc) / 1000).toFixed(2);
-      setAccData(prevData => [...prevData, { x: x * 9.8, y: y * 9.8, z: z * 9.8, currentTime }]);
-    };
-  
-    if (isTrial) {
-      Accelerometer.setUpdateInterval(50);
-      const subscription = Accelerometer.addListener(handleAccelerometerData);
-      setSubscriptionAcc(subscription);
-    } else {
-      // If isTrial is false, remove the subscription
-      if (subscriptionAcc) {
-        subscriptionAcc.remove();
-      }
-    }
-  
-    // Clean up the subscription on component unmount
-    return () => {
-      if (subscriptionAcc) {
-        subscriptionAcc.remove();
-        setSubscriptionAcc(null); // Reset the subscription state
-
-      }
-    };
-  }, [isTrial]); */
-  
-
-
-  /* useEffect(() => {
-    Gyroscope.setUpdateInterval(50);
+  useEffect(() => {
 
     if (isTrial) {
-      setSubscriptionGyro(Gyroscope.addListener(({ x, y, z }) => {
+      const accListener = Accelerometer.addListener(({ x, y, z }) => {
         var currentTime = Date.now();
-        if (initialTimeGyro === 0) {
-          initialTimeGyro = currentTime;
+        if (initialTimeAcc === 0) {
+          initialTimeAcc = currentTime;
         }
-        currentTime = ((currentTime - initialTimeGyro) / 1000).toFixed(2);
-        setGyroData(prevData => [...prevData, { x, y, z, currentTime }]);
-      }));
-    } else {
-      unsubscribe();
+        currentTime = ((currentTime - initialTimeAcc) / 1000).toFixed(2);
+        accData.push({ x: x * 9.8, y: y * 9.8, z: z * 9.8, currentTime })
+
+      });
+      return () => {
+        accListener.remove();
+      };
     }
-  }, [isTrial]); */
 
 
-  /* useEffect(() => {
+
+  }, [isTrial]);
+
+  /*  useEffect(() => {
+     Gyroscope.setUpdateInterval(50);
+ 
+     if (isTrial) {
+       setSubscriptionGyro(Gyroscope.addListener(({ x, y, z }) => {
+         var currentTime = Date.now();
+         if (initialTimeGyro === 0) {
+           initialTimeGyro = currentTime;
+         }
+         currentTime = ((currentTime - initialTimeGyro) / 1000).toFixed(2);
+         setGyroData(prevData => [...prevData, { x, y, z, currentTime }]);
+       }));
+     } 
+ 
+    
+   }, [isTrial]); */
+
+
+  useEffect(() => {
     return () => {
       if (timeoutIdRef.current) {
         clearTimeout(timeoutIdRef.current);
         timeoutIdRef.current = null;
       }
     };
-  }, []); */
+  }, []);
 
-
-
-  /* useEffect(() => {
+  useEffect(() => {
     if (!isTrial && accData.length > 1) {
-      console.log("ola")
       // This block will be executed when isTrial becomes false
       set(ref(db, 'Patients/' + "rita" + `/sensor_trials/single_task/Trial_${trial + 1}/`), {
         time: moment().format('MMMM Do YYYY, h:mm:ss a'),
         accelerometer: accData.slice(1),
         gyroscope: gyroData.slice(1)
       }).then(() => {
-        initialTimeAcc = 0;
-        initialTimeGyro = 0;
-        setAccData([{ x: 0.0000, y: 0.0000, z: 0.0000 }]);
+        //setAccData([{ x: 0.0000, y: 0.0000, z: 0.0000 }]);
         setGyroData([{ x: 0.0000, y: 0.0000, z: 0.0000 }]);
         setModalVisible(!modalVisible);
       });
     }
-  }, [isTrial]); */
-
-  const unsubscribe = () => {
-    try {
-      subscriptionAcc && subscriptionAcc.remove();
-      //subscriptionGyro && subscriptionGyro.remove();
-      setSubscriptionAcc(null);
-      setSubscriptionGyro(null);
-    } catch (error) {
-      console.error("Error during unsubscribe:", error);
-    }
-  };
-
+  }, [isTrial]);
 
   const handleTrial = () => {
     setIsTrial(true)
 
-    /* //20 seconds
+    //10 seconds
     const id = setTimeout(() => {
       setIsTrial(false);
     }, 10000);
 
-    timeoutIdRef.current = id; */
+    timeoutIdRef.current = id;
   }
 
-  const stopTrial = async () => {
-    // Set isTrial to false with a delay
-    setTimeout(() => {
-      setIsTrial(false);
-    }, 0);
+  async function stopTrial() {
+    setIsTrial(false)
+    console.log(accData)
+    if (timeoutIdRef.current) {
+      setIsTrial(false)
+      clearTimeout(timeoutIdRef.current);
+      timeoutIdRef.current = null;
+      initialTimeAcc = 0
+      initialTimeGyro = 0
+    }
   }
-
-  const renderAcc = () => (
-    <>
-      <ListItem
-        title={evaProps => <Text {...evaProps} style={{ ...styles.text, color: "#808080", fontSize: 23 }} >x</Text>}
-        description={evaProps => <Text {...evaProps} style={styles.text} >{accData[accData.length - 1]?.x.toFixed(4)}</Text>} />
-      <ListItem
-        title={evaProps => <Text {...evaProps} style={{ ...styles.text, color: "#808080", fontSize: 23 }} >y</Text>}
-        description={evaProps => <Text {...evaProps} style={styles.text} >{accData[accData.length - 1]?.y.toFixed(4)}</Text>} />
-      <ListItem
-        title={evaProps => <Text {...evaProps} style={{ ...styles.text, color: "#808080", fontSize: 23 }} >z</Text>}
-        description={evaProps => <Text {...evaProps} style={styles.text} >{accData[accData.length - 1]?.z.toFixed(4)}</Text>} />
-    </>
-  );
-
-  const renderGyro = () => (
-    <>
-      <ListItem
-        title={evaProps => <Text {...evaProps} style={{ ...styles.text, color: "#808080", fontSize: 23, height: 30 }} >x</Text>}
-        description={evaProps => <Text {...evaProps} style={styles.text} >{gyroData[gyroData.length - 1]?.x.toFixed(4)}</Text>} />
-      <ListItem
-        title={evaProps => <Text {...evaProps} style={{ ...styles.text, color: "#808080", fontSize: 23 }} >y</Text>}
-        description={evaProps => <Text {...evaProps} style={styles.text} >{gyroData[gyroData.length - 1]?.y.toFixed(4)}</Text>} />
-      <ListItem
-        title={evaProps => <Text {...evaProps} style={{ ...styles.text, color: "#808080", fontSize: 23 }} >z</Text>}
-        description={evaProps => <Text {...evaProps} style={styles.text} >{gyroData[gyroData.length - 1]?.z.toFixed(4)}</Text>} />
-    </>
-  );
 
   return (
     <ApplicationProvider {...eva} theme={eva.light}>
@@ -201,31 +142,20 @@ function SingleTask() {
         style={styles.container}
         level='2'
       >
-        <View style={{ justifyContent: "center" }}>
-          <View style={{ paddingBottom: 30 }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 7, marginLeft: 7, marginTop: 5 }}>Accelerometer [m/s²]</Text>
-            <List
-              data={[0]}
-              ItemSeparatorComponent={Divider}
-              renderItem={renderAcc}
-            />
-          </View>
-          <View>
-            <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 7, marginLeft: 7 }}>Gyroscope [rad/s]</Text>
-            <List
-              data={[0]}
-              ItemSeparatorComponent={Divider}
-              renderItem={renderGyro}
-            />
-          </View>
-          {!isTrial ? (<Button style={{ marginTop: 25, marginLeft: 100, elevation: 2, width: 200, backgroundColor: "#8bae1d", borderWidth: 0 }} onPress={handleTrial}>
-            <Text style={{ fontSize: 30, color: 'white' }}>Start Trial</Text>
-          </Button>) : (
-          <Button style={{ marginTop: 25, marginLeft: 100, elevation: 2, width: 200, backgroundColor: "#d3d3d3", borderWidth: 0 }} onPress={stopTrial}>
+       
+        <View flexDirection="row" justifyContent="center" alignItems="flex-end" style={{marginTop:150, marginBottom:20}}>
+          <Icon name='directions-walk' size={200} color="#808080" fill='#8F9BB3' />
+          <Icon name='timer' style={{ marginLeft: -65 }} size={100} color="#e9e9e9" fill='#8F9BB3' />
+        </View>
+        <Text style={{textAlign:"center"}}>You must walk for at least 10 seconds.</Text>
+        {!isTrial ? <Button style={{ marginTop: 70, marginLeft: 100, marginBottom: 170, elevation: 2, width: 200, height:80, backgroundColor: "#8bae1d", borderWidth: 0, justifyContent: 'center' }} onPress={handleTrial}>
+          <Text style={{ fontSize: 100, color: 'white' }}>Start Trial</Text>
+        </Button> : (
+          <Button style={{ marginTop: 25, marginLeft: 100, elevation: 2, width: 200, backgroundColor: "#d3d3d3", borderWidth: 0 }} onPress={async () => { await stopTrial(); }}>
             <Text style={{ fontSize: 30, color: 'white' }}>Stop Trial</Text>
           </Button>
-          )}
-        </View>
+        )}
+
         <View style={styles.centeredView}>
           <Modal
             animationType="fade"
@@ -243,7 +173,6 @@ function SingleTask() {
               </View>
             </View>
           </Modal>
-
         </View>
       </Layout>
     </ApplicationProvider>
@@ -258,7 +187,7 @@ function DualTask() {
   );
 }
 
-export default function Trials({accData, isTrial}) {
+export default function Trials() {
 
   const Tab = createMaterialTopTabNavigator();
 
