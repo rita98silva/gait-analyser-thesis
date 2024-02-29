@@ -109,7 +109,7 @@ function App() {
             } else if (route.name === 'Trial') {
               iconName = 'directions-walk';
             } else if (route.name === 'Results') {
-              iconName = 'equalizer';
+              iconName = 'show-chart';
             }
 
             return <Icon name={iconName} size={size} color={color} />;
