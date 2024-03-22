@@ -14,11 +14,13 @@ import Animated, {
   withTiming,
   withRepeat,
   Easing,
-  FadeOut, 
-  FadeInDown, 
+  FadeOut,
+  FadeInDown,
   withSequence
 } from 'react-native-reanimated';
 import { CircularProgressBase } from 'react-native-circular-progress-indicator';
+
+import Sensors from '../Sensors';
 
 
 var accData = []
@@ -43,6 +45,7 @@ function SingleTask() {
   Accelerometer.setUpdateInterval(50);
   Gyroscope.setUpdateInterval(50);
 
+  // Animations
   const defaultAnim = useSharedValue(50);
 
   const animatedDefault = useAnimatedStyle(() => ({
@@ -80,6 +83,7 @@ function SingleTask() {
     );
   }, []);
 
+  // ----------
 
   useEffect(() => {
     const dataRef = ref(db, 'Patients/rita/sensor_trials/single_task');
@@ -143,17 +147,22 @@ function SingleTask() {
   }, []);
 
 
-  const sendData = () => {
-    set(ref(db, 'Patients/' + "rita" + `/sensor_trials/single_task/Trial_${trial + 1}/`), {
-      time: moment().format('MMMM Do YYYY, h:mm:ss a'),
-      accelerometer: accData,
-      gyroscope: gyroData
-    }).then(() => {
-      accData = []
-      gyroData = []
-      initialTimeAcc = 0
-      initialTimeGyro = 0
-    });
+  const sendData = async () => {
+    await Sensors(accData).then((data) => {
+      set(ref(db, 'Patients/' + "rita" + `/sensor_trials/single_task/Trial_${trial + 1}/`), {
+        time: moment().format('MMMM Do YYYY, h:mm:ss a'),
+        accelerometer: accData,
+        gyroscope: gyroData,
+        steps: data.steps,
+        AMW: data.filteredEnergy
+      }).then(() => {
+        accData = []
+        gyroData = []
+        initialTimeAcc = 0
+        initialTimeGyro = 0
+      });
+    })
+
   }
 
 
@@ -175,7 +184,7 @@ function SingleTask() {
         }, 10000);
 
         timeoutIdRef.current = id;
-      }, 2000)
+      }, 1500)
 
     }, 5000)
   }
@@ -264,12 +273,10 @@ function SingleTask() {
                       }
                     >
                       <View alignItems="center" justifyContent="center" flexDirection="row">
-
                         <Icon name='show-chart' size={250} color="#e9e9e9" />
                         <Animated.View style={[styles.animatedIconContainer, animatedStyle]}>
                           <Icon name='directions-walk' size={150} color="#8bae1d" fill='#8F9BB3' />
                         </Animated.View>
-
                       </View>
                     </CircularProgressBase>
                   </View>
@@ -310,14 +317,13 @@ function SingleTask() {
           >
             <View style={styles.centeredView}>
               <View style={styles.modalView}>
-                <Text style={{...styles.modalText, marginBottom:10}}>Trial was stopped</Text>
+                <Text style={{ ...styles.modalText, marginBottom: 10 }}>Trial was stopped</Text>
                 <Text style={styles.errorText}>This trial will not be saved.</Text>
-
-                <TouchableOpacity onPress={() => setTrialStopped(!trialStopped)} style ={{alignSelf:"flex-end"}}>
-        <Text style={{ fontSize: 18, color: '#808080', alignSelf:"flex-end" }}>
-          Close
-        </Text>
-      </TouchableOpacity>
+                <TouchableOpacity onPress={() => setTrialStopped(!trialStopped)} style={{ alignSelf: "flex-end" }}>
+                  <Text style={{ fontSize: 18, color: '#808080', alignSelf: "flex-end" }}>
+                    Close
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
           </Modal>
@@ -407,7 +413,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     textAlign: 'center',
     fontSize: 15,
-    color:"red"
+    color: "red"
   },
   box: {
     height: 120,

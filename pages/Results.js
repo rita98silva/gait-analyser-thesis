@@ -7,7 +7,6 @@ import Timeline from 'react-native-timeline-flatlist';
 import * as eva from '@eva-design/eva';
 import { db } from "../firebaseConfig";
 import { ref, onValue } from "firebase/database";
-import Sensors from "../Sensors";
 import { LineChart } from "react-native-chart-kit";
 
 export default function Results({ navigation }) {
@@ -17,6 +16,19 @@ export default function Results({ navigation }) {
   const Stack = createNativeStackNavigator();
 
   const screenWidth = Dimensions.get("window").width;
+
+
+  const retrieveData = (trial, task) => {
+    const dataRef = ref(db, `Patients/rita/sensor_trials/${task}/${trial}`);
+
+    onValue(dataRef, (snapshot) => {
+      const dbData = snapshot.val();
+      navigation.navigate('ResultsCharts', {
+        energy: dbData.AMW,
+        numSteps: dbData.steps[1].length,
+      })
+    });
+  }
 
   function TimelineTrials({ task }) {
 
@@ -41,7 +53,7 @@ export default function Results({ navigation }) {
       let desc = <Text >{e.description}</Text>
 
       return (
-        <Button style={{ ...styles.button, backgroundColor: "#fff" }} onPress={() => navigation.navigate('ResultsCharts')}>
+        <Button style={{ ...styles.button, backgroundColor: "#fff" }} onPress={() => retrieveData(e.title, "single_task")}>
           <View flexDirection="column" >
             {title}
             {desc}
@@ -50,7 +62,6 @@ export default function Results({ navigation }) {
       )
     }
 
-    Sensors("rita", "Trial_7")
     return (
       <ApplicationProvider {...eva} theme={eva.light}>
         <Timeline data={data} renderDetail={renderDetail} showTime={false}
@@ -61,16 +72,19 @@ export default function Results({ navigation }) {
           }} />
       </ApplicationProvider>
     );
-
   }
 
-  function ResultsChart({ trial }) {
+  function ResultsChart({ route, navigation }) {
+    const { energy } = route.params
+    const { numSteps } = route.params
+
+    const samples = Array.from({ length: energy.length }, (_, i) => i + 1)
 
     const data = {
-      labels: ["January", "February", "March", "April", "May", "June"],
+      //labels: samples,
       datasets: [
         {
-          data: [20, 45, 28, 80, 99, 43],
+          data: energy,
           color: (opacity = 1) => `rgba(20, 26, 184, ${opacity})`,
           strokeWidth: 2
         }
@@ -94,7 +108,7 @@ export default function Results({ navigation }) {
     return (
       <>
         <ApplicationProvider {...eva} theme={eva.light}>
-          <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 13, marginLeft: 7, marginTop: 5 }}>Step Segmentation</Text>
+          <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 13, marginLeft: 7, marginTop: 20 }}>Step Segmentation</Text>
         </ApplicationProvider>
         <LineChart
           data={data}
@@ -105,17 +119,8 @@ export default function Results({ navigation }) {
         />
 
         <ApplicationProvider {...eva} theme={eva.light}>
-          <Text style={{ fontWeight: 'bold', fontSize: 15, marginBottom: 13, marginLeft: 20, marginTop: 5 }}>Number of steps: </Text>
-          <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 13, marginLeft: 7, marginTop: 30 }}>Gyroscope Sensor Data </Text>
+          <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 13, marginLeft: 20, marginTop: 15, alignSelf: "center" }}>Number of steps: {numSteps}</Text>
         </ApplicationProvider>
-
-        <LineChart
-          data={data}
-          width={screenWidth}
-          height={220}
-          chartConfig={chartConfig}
-          style={{ elevation: 3 }}
-        />
       </>
     );
   }

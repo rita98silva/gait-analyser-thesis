@@ -1,22 +1,15 @@
-import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
-import { ref, set, onValue } from "firebase/database";
-import { db } from "./firebaseConfig";
-
-
 function SignalEnergy(sample) {
   return Math.sqrt((Math.pow(sample.x, 2) + Math.pow(sample.y, 2) + Math.pow(sample.z, 2)));
 }
 
 
-function AMW(AccSamples, ACalib) {
+function AMW(accSamples, ACalib) {
   var filteredEnergy = []
-
   var sum = null
 
-  for (let i = 5; i < AccSamples.length - 5; i++) {
+  for (let i = 5; i < accSamples.length - 5; i++) {
     for (let j = i - 5; j < i + 6; j++) {
-      sum = sum + SignalEnergy(AccSamples[j]) - ACalib
+      sum = sum + SignalEnergy(accSamples[j]) - ACalib
     }
     filteredEnergy.push(sum / (2 * 5 + 1))
     sum = 0
@@ -26,9 +19,9 @@ function AMW(AccSamples, ACalib) {
 }
 
 
-function StepDetectionAlgorithm(AccSamples, ACalib, T, w) {
-  var filteredEnergy = AMW(AccSamples, ACalib)
-console.log(filteredEnergy)
+function StepDetectionAlgorithm(accSamples, ACalib, T, w) {
+  var filteredEnergy = AMW(accSamples, ACalib)
+
   var counter = 0;
   var prev_high = false
   var look_fw = false
@@ -77,40 +70,30 @@ console.log(filteredEnergy)
     }
   }
 
-  return [step_start_idx, step_end_idx];
+  return { steps: [step_start_idx, step_end_idx], filteredEnergy: filteredEnergy };
 }
 
-export default function Sensors(patient, trial) {
-
-  var AccSamples = null
+export default async function Sensors(accSamples) {
 
   var AbiasX = null
   var AbiasY = null
   var AbiasZ = null
-
   var ACalib = null
 
-  const dataRef = ref(db, `Patients/${patient}/sensor_trials/single_task/Trial_21`);
+  const numSamples = accSamples.length
 
-  const fetchData = onValue(dataRef, (snapshot) => {
+  accSamples.map((data) => {
+    AbiasX = AbiasX + data.x
+    AbiasY = AbiasY + data.y
+    AbiasZ = AbiasZ + data.z
+  })
 
-    AccSamples = snapshot.val().accelerometer
-    const numSamples = snapshot.val().accelerometer.length
-    AccSamples.map((data) => {
-      AbiasX = AbiasX + data.x
-      AbiasY = AbiasY + data.y
-      AbiasZ = AbiasZ + data.z
-    })
+  AbiasX = AbiasX / numSamples
+  AbiasY = AbiasY / numSamples
+  AbiasZ = AbiasZ / numSamples
 
-    AbiasX = AbiasX / numSamples
-    AbiasY = AbiasY / numSamples
-    AbiasZ = AbiasZ / numSamples
+  ACalib = Math.sqrt(Math.pow(AbiasX, 2) + Math.pow(AbiasY, 2) + Math.pow(AbiasZ, 2))
 
-    ACalib = Math.sqrt(Math.pow(AbiasX, 2) + Math.pow(AbiasY, 2) + Math.pow(AbiasZ, 2))
-
-    console.log(StepDetectionAlgorithm(AccSamples, ACalib, 0.1, 5))
-  });
-
-  return fetchData;
+  return StepDetectionAlgorithm(accSamples, ACalib, 0.1, 5);
 }
 
